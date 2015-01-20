@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 37
+/!svn/ver/438/bvuong/nlp_exercise/src
+END
+markov_models.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/!svn/ver/438/bvuong/nlp_exercise/src/markov_models.cpp
+END
+markov_models.h
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/!svn/ver/438/bvuong/nlp_exercise/src/markov_models.h
+END
+file_parsing.h
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/!svn/ver/438/bvuong/nlp_exercise/src/file_parsing.h
+END
+n_gram_models.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/!svn/ver/445/bvuong/nlp_exercise/src/n_gram_models.cpp
+END
+n_gram_models.h
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/!svn/ver/445/bvuong/nlp_exercise/src/n_gram_models.h
+END
+set_theory.h
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/!svn/ver/438/bvuong/nlp_exercise/src/set_theory.h
+END
+file_parsing.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/!svn/ver/438/bvuong/nlp_exercise/src/file_parsing.cpp
+END
+main.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/!svn/ver/445/bvuong/nlp_exercise/src/main.cpp
+END

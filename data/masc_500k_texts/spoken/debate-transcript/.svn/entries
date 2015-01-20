@@ -1,0 +1,52 @@
+8
+
+dir
+438
+https://svn.lv5.org/bvuong/nlp_exercise/data/masc_500k_texts/spoken/debate-transcript
+https://svn.lv5.org
+
+
+
+2013-05-13T00:58:21.385677Z
+438
+vqbao@lv5.org
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+3853def7-b63b-0410-a5a9-8968ad2f5b1a
+
+2nd_Gore-Bush.txt
+file
+
+
+
+
+2011-03-20T19:25:07.000000Z
+44fc9ec9a941fadb144632a2b92acda7
+2013-05-13T00:58:21.385677Z
+438
+vqbao@lv5.org
+
+3rd_Bush-Kerry.txt
+file
+
+
+
+
+2011-03-20T19:25:07.000000Z
+fd35d8e4602c41f925565098f26cc22f
+2013-05-13T00:58:21.385677Z
+438
+vqbao@lv5.org
+

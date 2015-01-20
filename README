@@ -1,0 +1,41 @@
+Assignment 10
+
+
+name: nlp_exercise
+author: Bao Vuong
+
+
+description:
+
+	I have decided to dabble into natural language processing, seeing how the process goes,
+	as well as the difficulties of such. I chose to do assignment 22.1, which introduces
+	the n-gram model (much like a markov chain, but probabilities are based on the 
+	frequencies of words are used). 
+
+analysis:
+
+	Unfortunately, generating a unigram causes the program to crash with a segmentation fault.
+	It might be because of the vast amount of connections it must make for each state, or
+	due to the lack of keeping track of something in my program. 
+	
+	As for the bigram and trigram, I can see that the trigram model was able to create
+	English better than the bigram, as well as having a smaller perplexity.
+
+how to compile:
+	There is a Makefile which should do the trick. just run
+	
+		make
+	
+	and it should compile.
+
+	
+how to run:
+	The syntax on running the program is:
+	
+		./nlp_exercise <n> <multiple text files>
+		
+	<n> is the n in n-gram.
+
+	the more words fetched from the files, the longer the program will take
+	to analyze through the words by generating the n-gram model.
+	

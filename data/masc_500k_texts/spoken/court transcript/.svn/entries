@@ -1,0 +1,52 @@
+8
+
+dir
+438
+https://svn.lv5.org/bvuong/nlp_exercise/data/masc_500k_texts/spoken/court%20transcript
+https://svn.lv5.org
+
+
+
+2013-05-13T00:58:21.385677Z
+438
+vqbao@lv5.org
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+3853def7-b63b-0410-a5a9-8968ad2f5b1a
+
+Day3PMSession.txt
+file
+
+
+
+
+2011-03-20T19:16:03.000000Z
+8e732512843225dde09d74921b9bccf5
+2013-05-13T00:58:21.385677Z
+438
+vqbao@lv5.org
+
+Lessig-court-transcript.txt
+file
+
+
+
+
+2011-03-20T19:25:45.000000Z
+82211891f6e69a39011d416770a975bf
+2013-05-13T00:58:21.385677Z
+438
+vqbao@lv5.org
+

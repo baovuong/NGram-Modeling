@@ -1,0 +1,484 @@
+/*
+ * n_gram_models.cpp
+ *
+ *  Created on: May 1, 2013
+ *      Author: bvuong
+ */
+
+#include <stdlib.h>
+#include <vector>
+#include <ctype.h>
+#include <iostream> // debugging
+#include <math.h>
+#include <sstream>
+#include <set>
+#include <map>
+
+#include "n_gram_models.h"
+#include "set_theory.h"
+
+using namespace set_theory;
+
+namespace finite_automata {
+
+
+// =========== NGramState member functions ======================
+
+
+
+NGramState::NGramState(int n=1) {
+	n_ = n;
+
+}
+
+
+NGramState::~NGramState() {
+}
+
+void NGramState::AssignWords(string words) {
+	vector<string> word_vector = StringToVector(words);
+
+	if (word_vector.size() > n_)
+		return;
+
+	while (word_vector.size() < n_) {
+		word_vector.insert(word_vector.begin(),UNKNOWN_WORD);
+	}
+
+	for (int i=0; i<n_-1; i++) {
+		previous_words_.push(word_vector[i]);
+	}
+
+	set_value(word_vector[n_-1]);
+
+}
+
+
+vector<string> NGramState::Words() {
+	vector<string> result;
+	stack<string> temp;
+	while (!previous_words_.empty()) {
+		temp.push(previous_words_.top());
+		previous_words_.pop();
+		if (temp.top() != UNKNOWN_WORD)
+			result.insert(result.begin(),temp.top());
+	}
+
+	while (!temp.empty()) {
+		previous_words_.push(temp.top());
+		temp.pop();
+	}
+
+	result.push_back(value());
+
+	return result;
+}
+
+stack<string> NGramState::previous_words() {
+	return previous_words_;
+}
+
+bool NGramState::final_state() {
+	return final_state_;
+}
+
+void NGramState::set_final_state(bool value) {
+	final_state_ = value;
+}
+
+bool NGramState::initial_state() {
+	return initial_state_;
+}
+
+void NGramState::set_initial_state(bool value) {
+	initial_state_ = value;
+}
+
+
+void NGramState::OutputState() {
+	cout << value() << "{" << initial_state() << "," << final_state() << "}" << "|";
+	for (int i=0; i<relations().size(); i++) {
+		cout << relations()[i].prob << "->" << relations()[i].state->value() << ",";
+	}
+	cout << endl;
+}
+
+double NGramState::Probability(vector<string> content) {
+	double result = 0;
+	vector<string> words = Words();
+	vector<string> prev_words = Words();
+	prev_words.erase(prev_words.end());
+	result = (double)Count(words,content) / (double)Count(prev_words,content);
+
+	return result;
+}
+
+
+
+// ============= NGramModel member functions ======================
+
+NGramModel::NGramModel(int n=1, vector<string> content=NULL) {
+	n_ = n;
+	content_ = content;
+	states_table_ = new GramTable(n,content);
+}
+
+NGramModel::~NGramModel() {
+
+}
+
+void NGramModel::set_content(vector<string> content_args) {
+	content_ = content_args;
+}
+
+vector<NGramState*> NGramModel::states() {
+	return states_;
+}
+
+vector<NGramState*> NGramModel::initial_states() {
+	return initial_states_;
+}
+
+vector<NGramState*> NGramModel::final_states() {
+	return final_states_;
+}
+
+void NGramModel::AddState(NGramState* state) {
+	if (Contains(states_,state)) {
+		cout << "found duplicate" << endl;
+		return;
+	}
+	cout << "adding state" << endl;
+
+	cout << "in states_" << endl;
+	states_.push_back(state);
+	cout << "done" << endl;
+
+	cout << "in states_table_" << endl;
+	states_table_->Add(state);
+	cout << "done" << endl;
+
+	string word = state->value();
+	// if capitalized
+	if (isupper(word[0])) {
+		// should be an initial state
+		initial_states_.push_back(state);
+		state->set_initial_state(true);
+	}
+	// if ending in punctuation
+	else if (word[word.size()-1] == '.' ||
+			word[word.size()-1] == '!' ||
+			word[word.size()-1] == '?') {
+		final_states_.push_back(state);
+		state->set_final_state(true);
+	}
+}
+
+void NGramModel::SetUp() {
+	for (int i=0; i<states_.size(); i++) {
+
+		// find states for chosen state to connect to
+
+		// setup stacks for data manipulation
+		stack<string> next = states_[i]->previous_words();
+		stack<string> temp;
+
+		while (!next.empty()) {
+			temp.push(next.top());
+			next.pop();
+		}
+		// no need for the last value
+		temp.pop();
+
+		while (!temp.empty()) {
+			next.push(temp.top());
+			temp.pop();
+		}
+		// add state's value
+		next.push(states_[i]->value());
+
+		vector<NGramState*> states = states_table_->GramStates(next);
+
+		// connecting
+		for (int j=0; j<states.size(); j++) {
+			// calculating probability
+			double prob = states[j]->Probability(content_);
+			// making the connection
+			states_[i]->AddTransition(prob,states[j]);
+		}
+	}
+}
+
+double NGramModel::Perplexity() {
+	//cout << "content: "; OutputVector(content_);
+	double result = 1;
+	for (int i=0; i<states_.size(); i++) {
+		int top,bottom;
+		vector<string> top_words,bottom_words;
+		top_words = states_[i]->Words();
+		//cout << "top words: "; OutputVector(top_words);
+		bottom_words = states_[i]->Words();
+		bottom_words.erase(bottom_words.end());
+		top = Count(top_words,content_);
+		if (bottom_words.size() == 0) {
+			bottom = content_.size()-n_+1;
+		}
+		else {
+			bottom = Count(bottom_words,content_);
+		}
+		//cout << "top: " << top << endl;
+		//cout << "bottom: " << bottom << endl;
+		if ((double)top/bottom > 0)
+			result *= (double)top/bottom;
+		//OutputVector(top_words); cout << "|";OutputVector(bottom_words); cout << " ";
+		//cout << top << "/" << bottom << endl;
+	}
+
+	cout << result << endl;
+	result = 1.0/pow(result,1.0/content_.size());
+
+	return result;
+}
+
+
+
+
+// ================ GramTable ===============================
+
+GramTable::GramTable(int n, vector<string> words) {
+	n_ = n;
+
+	// now that it's "empty", fill it with the words
+	cout << "filling word vector " << endl;
+	set<string> indexed_words;
+	int c = 1;
+	for (int i=0; i < words.size(); i++) {
+		if (indexed_words.count(words[i]) > 0) {
+			continue;
+		}
+		else {
+			word_index_[words[i]] = c;
+			indexed_words.insert(words[i]);
+		}
+
+	}
+	cout << "done" << endl;
+
+
+
+	// 3. set up hash table
+	cout << "setting up prefix table ";
+	for (int i=0; i<MAX_VALUES; i++) {
+		prefix_table_[i] = NULL;
+	}
+	cout << "done" << endl;
+	// read in words, and index them
+
+}
+
+GramTable::~GramTable() {
+	for (int i=0; i<MAX_VALUES; i++) {
+		if (prefix_table_[i] != NULL)
+			free(prefix_table_[i]);
+	}
+}
+
+
+int GramTable::Hash(stack<string> prefix) {
+	ostringstream sout;
+	int result=0;
+	int i = 0;
+	while (!prefix.empty()) {
+		string word = prefix.top();
+		prefix.pop();
+
+		result += word_index_[word] * pow(7,i);
+		i++;
+	}
+	return (result) % MAX_VALUES;
+}
+
+int GramTable::Hash2(stack<string> prefix) {
+	return SMALLER_MAX_VALUES - (Hash(prefix) % SMALLER_MAX_VALUES);
+}
+
+void GramTable::Add(NGramState* state) {
+	cout << "adding state in table" << endl;
+	stack<string> prefix = state->previous_words();
+
+	cout << "getting hash" << endl;
+	int hash = Hash(prefix);
+	cout << "done" << endl;
+
+	if (prefix_table_[hash] != NULL) {
+		cout << "data location not empty" << endl;
+		if (!EqualPrefixes(prefix_table_[hash]->prefix,prefix)) {
+			// collision
+			cout << "collision" << endl;
+			int hash2 = Hash2(prefix);
+			do {
+				hash += hash2;
+				cout << hash << endl;
+			} while (prefix_table_[hash] != NULL);
+		}
+		else {
+			prefix_table_[hash]->states.push_back(state);
+			return;
+		}
+	}
+
+	cout << "allocating" << endl;
+	prefix_table_[hash] = (PrefixRelation*)malloc(sizeof(PrefixRelation));
+
+	if (prefix_table_[hash] == NULL) {
+		cout << "problem" << endl;
+	}
+	else
+		cout << "done" << endl;
+
+	stack<string> temp;
+
+	cout << "prefix to temp" << endl;
+	while (!prefix.empty()) {
+		temp.push(prefix.top());
+		prefix.pop();
+	}
+	cout << "done" << endl;
+
+	cout << "temp to ->prefix" << endl;
+	while (!temp.empty()) {
+		prefix_table_[hash]->prefix.push(temp.top());
+		temp.pop();
+	}
+	cout << "done" << endl;
+
+	prefix_table_[hash]->states.push_back(state);
+}
+
+
+vector<NGramState*> GramTable::GramStates(stack<string> prefix) {
+	// get first hash
+	int hash = Hash(prefix);
+	if (prefix_table_[hash] != NULL && !EqualPrefixes(prefix,prefix_table_[hash]->prefix)) {
+		// collision, must find using second hash value
+		int hash2 = Hash2(prefix);
+		// loop around
+		for (int i=0; i<MAX_VALUES; i++) {
+			hash += hash2;
+			if (EqualPrefixes(prefix,prefix_table_[hash]->prefix))
+				return prefix_table_[hash]->states;
+		}
+
+		// cannot find prefix
+		vector<NGramState*> empty_states;
+		return empty_states;
+	}
+	else {
+		return prefix_table_[hash]->states;
+	}
+}
+
+// ================ funNGramState* statections ===============================
+
+int Count(vector<string> words, vector<string> content) {
+	if (words.size() == 0)
+		return content.size();
+	//cout << "starting count." << endl;
+	int count = 0;
+	//cout << "entering loop" << endl;
+	for (int i=0; i<content.size()-words.size() + 1; i++) {
+		//cout << "i: " << i << endl;
+		//cout << "content[i]: " << content[i] << "; words[0]: " << words[0] << endl;
+		if (content[i] == words[0]) {
+			//cout << "entering inner loop" << endl;
+			int inner_count = 1;
+			for (int j=1; j<words.size(); j++) {
+				//cout << "content[i+j]: " << content[i+j] << endl;
+				//cout << "words[j]: " << words[j] << endl;
+				if (content[i+j] == words[j])
+					inner_count++;
+			}
+			if (inner_count == words.size())
+				count++;
+		}
+	}
+	//cout << "exiting loop" << endl;
+	//cout << "done with count." << endl;
+
+	return count;
+}
+
+
+double WordFrequency(string phrase, string content) {
+	int phrase_amount = 1;
+	int content_amount = 1;
+	double found = 0;
+	double combinations;
+
+	// count the words
+
+	for (int i=0; i<phrase.size(); i++) {
+		if (phrase[i] == ' ') {
+			phrase_amount++;
+		}
+	}
+
+	for (int i=0; i<content.size(); i++) {
+		if (content[i] == ' ') {
+			content_amount++;
+		}
+	}
+
+	// determine how many possibitilies there are
+
+	combinations = content_amount - phrase_amount;
+
+	// finding the phrase in content
+
+	int looking = content.find(phrase);
+
+	while (looking > -1) {
+		cout << content.find(phrase) << endl;
+		found++;
+		content = content.substr(content.find(phrase)+1);
+	}
+
+	return found/combinations;
+}
+
+vector<string> StringToVector(string words) {
+	vector<string> result;
+	string word;
+	for (int i=0; i<words.length(); i++) {
+		//cout << "looking at character: '" << words[i] << "'" << endl;
+		//cout << "is '" << words[i] << "' a ws? " << isspace(words[i]) << endl;
+		if (isspace(words[i]) != 0 && word.length() > 0) {
+
+			result.push_back(word);
+			word = "";
+		}
+		else if (!isspace(words[i])){
+			word += words[i];
+		}
+	}
+	if (word.length() > 0) {
+		result.push_back(word);
+	}
+	return result;
+}
+
+bool EqualPrefixes(stack<string> p1, stack<string> p2) {
+	if (p1.size() != p2.size())
+		return false;
+
+	while (!(p1.empty() || p2.empty())) {
+		if (p1.top() != p2.top())
+			return false;
+		p1.pop();
+		p2.pop();
+	}
+
+	return true;
+}
+
+}

@@ -1,0 +1,40 @@
+8
+
+dir
+438
+https://svn.lv5.org/bvuong/nlp_exercise/data/masc_500k_texts/spoken
+https://svn.lv5.org
+
+
+
+2013-05-13T00:58:21.385677Z
+438
+vqbao@lv5.org
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+3853def7-b63b-0410-a5a9-8968ad2f5b1a
+
+court transcript
+dir
+
+debate-transcript
+dir
+
+face-to-face
+dir
+
+telephone
+dir
+
